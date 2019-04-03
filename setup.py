@@ -1,14 +1,11 @@
 import setuptools
 
 
-name = 'gumo-core'
-version = '0.0.17'
+name = 'gumo-storage'
+version = '0.0.1'
 description = 'Gumo Core Library'
 dependencies = [
-    'pyyaml >= 5.1',
-    'injector >= 0.13.1',
-    'google-cloud-storage >= 1.13.0',
-    'google-api-python-client >= 1.7.4'
+    'gumo-core >= 0.0.18',
 ]
 
 with open("README.md", "r") as fh:
@@ -27,7 +24,7 @@ setuptools.setup(
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/gumo-py/gumo-core",
+    url="https://github.com/gumo-py/gumo-storage",
     packages=packages,
     classifiers=[
         "Programming Language :: Python :: 3",
