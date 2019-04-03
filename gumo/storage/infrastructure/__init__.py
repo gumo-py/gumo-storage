@@ -59,3 +59,21 @@ class SignedURLFactory:
         ])
 
         return f'{base_url}?{params}'
+
+
+def build_signed_url(
+        bucket_name: str,
+        blob_path: str,
+        http_verb: str = 'GET',
+        md5_digest: str = '',
+        content_type: str = '',
+        expiration_seconds: int = 3600,
+):
+    return SignedURLFactory(
+        bucket_name=bucket_name,
+        blob_path=blob_path,
+        http_verb=http_verb,
+        md5_digest=md5_digest,
+        content_type=content_type,
+        expiration_seconds=expiration_seconds,
+    ).build()
