@@ -2,8 +2,8 @@ import setuptools
 
 
 name = 'gumo-storage'
-version = '0.0.1'
-description = 'Gumo Core Library'
+version = '0.0.2'
+description = 'Gumo Storage Library'
 dependencies = [
     'gumo-core >= 0.0.18',
 ]
