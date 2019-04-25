@@ -4,6 +4,9 @@ jobs:
     docker:
       - image: circleci/python:3.7.2
 
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: credentials/service-account.json
+
     working_directory: ~/repo
 
     steps:
@@ -29,6 +32,12 @@ jobs:
           paths:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: prepare credentials
+          command: |
+            mkdir -p $(dirname $GOOGLE_APPLICATION_CREDENTIALS)
+            echo $GOOGLE_SERVICE_ACCOUNT_EMPTY_ROLE_CREDENTIAL_CONTENT > $GOOGLE_APPLICATION_CREDENTIALS
 
       - run:
           name: check requirements.txt
