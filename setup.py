@@ -2,10 +2,10 @@ import setuptools
 
 
 name = 'gumo-storage'
-version = '0.0.2'
+version = '0.0.3'
 description = 'Gumo Storage Library'
 dependencies = [
-    'gumo-core >= 0.0.18',
+    'gumo-core >= 0.0.27',
 ]
 
 with open("README.md", "r") as fh:
