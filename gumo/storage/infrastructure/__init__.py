@@ -1,6 +1,12 @@
 import datetime
 import base64
+
 from gumo.core import get_google_oauth_credential
+
+import google.auth.transport.requests
+from google.oauth2 import service_account
+from google.auth import compute_engine
+from google.auth.iam import Signer
 
 
 class SignedURLFactory:
@@ -43,11 +49,25 @@ class SignedURLFactory:
 
         return '\n'.join(info)
 
-    def build(self):
-        credential = self.get_credential()
+    def _signer(self):
+        credentials = self.get_credential()
+        if isinstance(credentials, service_account.Credentials):
+            return (credentials.signer, credentials.signer_email)
+        elif isinstance(credentials, compute_engine.Credentials):
+            request = google.auth.transport.requests.Request()
+            signer = Signer(
+                request=request,
+                credentials=credentials,
+                service_account_email=credentials.service_account_email
+            )
+            return (signer, credentials.service_account_email)
+        else:
+            raise RuntimeError(f'Unknown credential instance of {type(credentials)}')
 
-        signer_email = credential.signer_email
-        signature = credential.sign_bytes(self._string_to_sign().encode('ascii'))
+    def build(self):
+        signer, signer_email = self._signer()
+
+        signature = signer.sign(self._string_to_sign().encode('ascii'))
         encoded_signature = base64.b64encode(signature).decode('ascii')
         escaped_signature = encoded_signature.replace('+', '%2B').replace('/', '%2F')
 
