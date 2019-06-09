@@ -13,11 +13,14 @@ jobs:
       - checkout
 
       # Download and cache dependencies
+      - run:
+          name: Generate cache key
+          command: |
+            cat requirements.txt | grep -v '^#' > /tmp/original-requirements.txt
       - restore_cache:
+          name: Restoring Cache - venv cache
           keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+            - venv-{{ .Environment.COMMON_CACHE_KEY }}-{{ checksum "/tmp/original-requirements.txt" }}
 
       - run:
           name: install dependencies
@@ -44,8 +47,21 @@ jobs:
           command: |
             . venv/bin/activate
 
-            make build
-            git diff --exit-code
+            make pip-compile
+
+            cat requirements.txt | grep -v '^#' > /tmp/updated-requirements.txt
+
+            if [ $(diff -u /tmp/original-requirements.txt /tmp/updated-requirements.txt | wc -l) -ne 0 ]
+            then
+              echo "**************************************************"
+              echo "pip-compile を実行した結果、以下の差分が見つかりました:"
+              echo "**************************************************"
+              diff -u /tmp/original-requirements.txt /tmp/updated-requirements.txt || echo
+              echo "*************************************************************************************"
+              echo "手元の環境で 'make pip-compile' を実行して、 requirements.txt を更新・コミットしてください。"
+              echo "*************************************************************************************"
+              exit 1
+            fi
 
       - run:
           name: run tests
@@ -59,3 +75,8 @@ jobs:
 
       - store_test_results:
           path: test-reports
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: venv-{{ .Environment.COMMON_CACHE_KEY }}-{{ checksum "/tmp/original-requirements.txt" }}

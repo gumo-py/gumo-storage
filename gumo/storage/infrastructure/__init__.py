@@ -1,5 +1,6 @@
 import datetime
 import base64
+from logging import getLogger
 
 from gumo.core import get_google_oauth_credential
 
@@ -7,6 +8,8 @@ import google.auth.transport.requests
 from google.oauth2 import service_account
 from google.auth import compute_engine
 from google.auth.iam import Signer
+
+logger = getLogger(__name__)
 
 
 class SignedURLFactory:
@@ -16,6 +19,15 @@ class SignedURLFactory:
     def get_credential(cls):
         if cls._credential is None:
             cls._credential = get_google_oauth_credential()
+
+        if cls._credential.requires_scopes:
+            cls._credential = cls._credential.with_scopes(
+                scopes=('https://www.googleapis.com/auth/devstorage.read_only',)
+            )
+
+        if not cls._credential.valid or cls._credential.service_account_email is None:
+            request = google.auth.transport.requests.Request()
+            cls._credential.refresh(request=request)
 
         return cls._credential
 
