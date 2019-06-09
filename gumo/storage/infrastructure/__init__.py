@@ -16,6 +16,9 @@ class SignedURLFactory:
     def get_credential(cls):
         if cls._credential is None:
             cls._credential = get_google_oauth_credential()
+        if not cls._credential.valid or cls._credential.service_account_email is None:
+            request = google.auth.transport.requests.Request()
+            cls._credential.refresh(request=request)
 
         return cls._credential
 
