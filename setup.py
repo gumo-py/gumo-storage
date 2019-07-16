@@ -5,7 +5,7 @@ name = 'gumo-storage'
 version = '0.0.5'
 description = 'Gumo Storage Library'
 dependencies = [
-    'gumo-core >= 0.0.30',
+    'gumo-core >= 0.1.0',
 ]
 
 with open("README.md", "r") as fh:
