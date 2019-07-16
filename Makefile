@@ -42,4 +42,5 @@ pip-compile:
 .PHONY: test
 test: build
 	pip3 install dist/${package_name}*.tar.gz
-	pytest -v --junit-xml=test-reports/results.xml tests/config.py tests
+	GOOGLE_CLOUD_PROJECT=gumo-sample \
+		pytest -v --junit-xml=test-reports/results.xml tests/config.py tests
