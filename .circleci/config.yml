@@ -12,15 +12,10 @@ jobs:
     steps:
       - checkout
 
-      # Download and cache dependencies
-      - run:
-          name: Generate cache key
-          command: |
-            cat requirements.txt | grep -v '^#' > /tmp/original-requirements.txt
       - restore_cache:
           name: Restoring Cache - venv cache
           keys:
-            - venv-{{ .Environment.COMMON_CACHE_KEY }}-{{ checksum "/tmp/original-requirements.txt" }}
+            - venv-{{ .Environment.COMMON_CACHE_KEY }}-{{ checksum "requirements.txt" }}
 
       - run:
           name: install dependencies
@@ -31,37 +26,11 @@ jobs:
             pip install pip-tools
             make setup
 
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-
       - run:
           name: prepare credentials
           command: |
             mkdir -p $(dirname $GOOGLE_APPLICATION_CREDENTIALS)
             echo $GOOGLE_SERVICE_ACCOUNT_EMPTY_ROLE_CREDENTIAL_CONTENT > $GOOGLE_APPLICATION_CREDENTIALS
-
-      - run:
-          name: check requirements.txt
-          command: |
-            . venv/bin/activate
-
-            make pip-compile
-
-            cat requirements.txt | grep -v '^#' > /tmp/updated-requirements.txt
-
-            if [ $(diff -u /tmp/original-requirements.txt /tmp/updated-requirements.txt | wc -l) -ne 0 ]
-            then
-              echo "**************************************************"
-              echo "pip-compile を実行した結果、以下の差分が見つかりました:"
-              echo "**************************************************"
-              diff -u /tmp/original-requirements.txt /tmp/updated-requirements.txt || echo
-              echo "*************************************************************************************"
-              echo "手元の環境で 'make pip-compile' を実行して、 requirements.txt を更新・コミットしてください。"
-              echo "*************************************************************************************"
-              exit 1
-            fi
 
       - run:
           name: run tests
@@ -79,4 +48,4 @@ jobs:
       - save_cache:
           paths:
             - ./venv
-          key: venv-{{ .Environment.COMMON_CACHE_KEY }}-{{ checksum "/tmp/original-requirements.txt" }}
+          key: venv-{{ .Environment.COMMON_CACHE_KEY }}-{{ checksum "requirements.txt" }}
