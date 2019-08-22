@@ -1,6 +1,9 @@
 import datetime
 import base64
+import urllib.parse
+
 from logging import getLogger
+from typing import Optional
 
 from gumo.core import get_google_oauth_credential
 
@@ -39,12 +42,14 @@ class SignedURLFactory:
             md5_digest: str = '',
             content_type: str = '',
             expiration_seconds: int = 3600,
+            extra_parameters: Optional[dict] = None,
     ):
         self._bucket_name = bucket_name
-        self._blob_path = blob_path if blob_path.startswith('/') else f'/{blob_path}'
+        self._blob_path = blob_path.strip('/')
         self._http_verb = http_verb
         self._md5_digest = md5_digest
         self._content_type = content_type
+        self._extra_parameters = extra_parameters
 
         now = datetime.datetime.now().replace(microsecond=0)
         self._current_timestamp = int(now.timestamp())
@@ -56,7 +61,7 @@ class SignedURLFactory:
             self._md5_digest,
             self._content_type,
             str(self._expiration),
-            f'/{self._bucket_name}{self._blob_path}'
+            f'/{self._bucket_name}/{self._blob_path}'
         ]
 
         return '\n'.join(info)
@@ -76,21 +81,30 @@ class SignedURLFactory:
         else:
             raise RuntimeError(f'Unknown credential instance of {type(credentials)}')
 
-    def build(self):
+    def _sign(self):
         signer, signer_email = self._signer()
 
-        signature = signer.sign(self._string_to_sign().encode('ascii'))
-        encoded_signature = base64.b64encode(signature).decode('ascii')
-        escaped_signature = encoded_signature.replace('+', '%2B').replace('/', '%2F')
+        signature = signer.sign(self._string_to_sign().encode('utf-8'))
+        encoded_signature = base64.b64encode(signature).decode('utf-8')
+        escaped_signature = urllib.parse.quote_plus(encoded_signature)
 
-        base_url = f'https://storage.googleapis.com/{self._bucket_name}{self._blob_path}'
-        params = '&'.join([
-            f'GoogleAccessId={signer_email}',
-            f'Expires={self._expiration}',
-            f'Signature={escaped_signature}',
-        ])
+        base_url = f'https://storage.googleapis.com/{self._bucket_name}/{self._blob_path}'
+        params = {
+            'GoogleAccessId': signer_email,
+            'Expires': str(self._expiration),
+            'Signature': escaped_signature,
+        }
 
-        return f'{base_url}?{params}'
+        if isinstance(self._extra_parameters, dict):
+            params.update(self._extra_parameters)
+
+        return (base_url, params)
+
+    def build(self):
+        base_url, params = self._sign()
+        query_params = urllib.parse.urlencode(params)
+
+        return f'{base_url}?{query_params}'
 
 
 def build_signed_url(
@@ -100,6 +114,7 @@ def build_signed_url(
         md5_digest: str = '',
         content_type: str = '',
         expiration_seconds: int = 3600,
+        extra_parameters: Optional[dict] = None,
 ):
     return SignedURLFactory(
         bucket_name=bucket_name,
@@ -108,4 +123,5 @@ def build_signed_url(
         md5_digest=md5_digest,
         content_type=content_type,
         expiration_seconds=expiration_seconds,
+        extra_parameters=extra_parameters,
     ).build()

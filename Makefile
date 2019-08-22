@@ -43,4 +43,4 @@ pip-compile:
 test: build
 	pip3 install dist/${package_name}*.tar.gz
 	GOOGLE_CLOUD_PROJECT=gumo-sample \
-		pytest -v --junit-xml=test-reports/results.xml tests/config.py tests
+		pytest -vv --junit-xml=test-reports/results.xml tests/config.py tests
