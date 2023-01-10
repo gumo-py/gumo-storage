@@ -30,7 +30,7 @@ jobs:
           name: prepare credentials
           command: |
             mkdir -p $(dirname $GOOGLE_APPLICATION_CREDENTIALS)
-            echo $GOOGLE_SERVICE_ACCOUNT_EMPTY_ROLE_CREDENTIAL_CONTENT > $GOOGLE_APPLICATION_CREDENTIALS
+            echo $GCP_CREDENTIALS_GUMO_EXAMPLE_1d620b79fa32 > $GOOGLE_APPLICATION_CREDENTIALS
 
       - run:
           name: run tests
